@@ -1,85 +1,142 @@
 #!/bin/bash
-# AgentTrust Quick Setup Script
-# Run this to set up everything automatically
+# AgentTrust Protocol - One-Command Setup
+# Usage: curl -sSL https://raw.githubusercontent.com/Tgcohce/agenttrust/master/setup.sh | bash
 
 set -e
-
-echo "🛡️  AgentTrust Protocol - Quick Setup"
-echo "======================================"
-echo ""
 
 # Colors
 GREEN='\033[0;32m'
 BLUE='\033[0;34m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+RED='\033[0;31m'
+NC='\033[0m'
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ]; then
-    echo "❌ Error: Please run this script from the agenttrust directory"
-    exit 1
-fi
+log() { echo -e "${BLUE}[AgentTrust]${NC} $1"; }
+success() { echo -e "${GREEN}[✓]${NC} $1"; }
+warn() { echo -e "${YELLOW}[!]${NC} $1"; }
+error() { echo -e "${RED}[✗]${NC} $1"; exit 1; }
 
-echo "${BLUE}Step 1: Installing dependencies...${NC}"
-npm install
-echo "${GREEN}✓ Dependencies installed${NC}"
+log "🛡️  AgentTrust Protocol - Automated Setup"
+echo "=========================================="
 echo ""
 
-echo "${BLUE}Step 2: Setting up wallet...${NC}"
+# Detect OS
+OS="$(uname -s)"
+case "${OS}" in
+    Linux*)     PLATFORM=Linux;;
+    Darwin*)    PLATFORM=Mac;;
+    CYGWIN*)    PLATFORM=Cygwin;;
+    MINGW*)     PLATFORM=MinGw;;
+    *)          PLATFORM="UNKNOWN:${OS}"
+esac
+
+log "Detected platform: $PLATFORM"
+
+# Check if in git repo
+if [ ! -d ".git" ]; then
+    log "📥 Cloning repository..."
+    git clone https://github.com/Tgcohce/agenttrust.git
+    cd agenttrust
+fi
+
+# Check Node.js
+if ! command -v node &> /dev/null; then
+    log "📦 Installing Node.js..."
+    if [ "$PLATFORM" = "Linux" ]; then
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+    elif [ "$PLATFORM" = "Mac" ]; then
+        if command -v brew &> /dev/null; then
+            brew install node
+        else
+            error "Please install Homebrew first: https://brew.sh"
+        fi
+    else
+        error "Please install Node.js 20+ manually: https://nodejs.org"
+    fi
+fi
+
+NODE_VERSION=$(node --version | cut -d'v' -f2 | cut -d'.' -f1)
+if [ "$NODE_VERSION" -lt 16 ]; then
+    error "Node.js 16+ required. Found: $(node --version)"
+fi
+success "Node.js $(node --version)"
+
+# Install dependencies
+log "📦 Installing dependencies..."
+npm install --silent 2>&1 | grep -v "deprecated" || true
+success "Dependencies installed"
+
+# Setup wallet
 if [ ! -f "wallet.json" ]; then
-    node generate-wallet.js
-    echo "${GREEN}✓ New wallet created${NC}"
+    log "🔑 Generating wallet..."
+    node generate-wallet.js > /tmp/wallet_gen.log 2>&1
+    success "Wallet created"
 else
-    echo "${YELLOW}⚠ Wallet already exists${NC}"
+    warn "Wallet already exists"
 fi
-echo ""
 
-echo "${BLUE}Step 3: Installing frontend dependencies...${NC}"
+WALLET_ADDR=$(node -e "console.log(JSON.parse(require('fs').readFileSync('./wallet.json')).publicKey)")
+log "Wallet: $WALLET_ADDR"
+
+# Install frontend deps
 cd app
-npm install
+npm install --silent 2>&1 | grep -v "deprecated" || true
 cd ..
-echo "${GREEN}✓ Frontend dependencies installed${NC}"
-echo ""
+success "Frontend dependencies installed"
 
-echo "${BLUE}Step 4: Checking Anchor installation...${NC}"
-if command -v anchor &> /dev/null; then
-    echo "${GREEN}✓ Anchor CLI found: $(anchor --version)${NC}"
-else
-    echo "${YELLOW}⚠ Anchor CLI not found${NC}"
-    echo "   To install: ${BLUE}cargo install --git https://github.com/coral-xyz/anchor avm && avm install latest && avm use latest${NC}"
+# Check Solana CLI
+if ! command -v solana &> /dev/null; then
+    log "📦 Installing Solana CLI..."
+    sh -c "$(curl -sSfL https://release.solana.com/stable/install)"
+    export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
 fi
-echo ""
 
-echo "${BLUE}Step 5: Checking Solana CLI...${NC}"
-if command -v solana &> /dev/null; then
-    echo "${GREEN}✓ Solana CLI found: $(solana --version)${NC}"
-    echo "   Current cluster: $(solana config get | grep "RPC URL" | awk '{print $3}')"
-else
-    echo "${YELLOW}⚠ Solana CLI not found${NC}"
-    echo "   To install: ${BLUE}sh -c \"$(curl -sSfL https://release.solana.com/stable/install)\"${NC}"
+SOLANA_VERSION=$(solana --version | awk '{print $2}')
+success "Solana CLI $SOLANA_VERSION"
+
+# Configure devnet
+solana config set --url devnet --quiet
+
+# Check Anchor
+if ! command -v anchor &> /dev/null; then
+    log "📦 Installing Anchor CLI..."
+    if ! command -v cargo &> /dev/null; then
+        log "📦 Installing Rust..."
+        curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+        source $HOME/.cargo/env
+    fi
+    cargo install --git https://github.com/coral-xyz/anchor avm --quiet
+    avm install 0.29.0 --quiet
+    avm use 0.29.0 --quiet
 fi
-echo ""
 
-echo "${BLUE}Step 6: Checking Rust...${NC}"
-if command -v rustc &> /dev/null; then
-    echo "${GREEN}✓ Rust found: $(rustc --version)${NC}"
-else
-    echo "${YELLOW}⚠ Rust not found${NC}"
-    echo "   To install: ${BLUE}curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh${NC}"
+ANCHOR_VERSION=$(anchor --version | awk '{print $2}')
+success "Anchor $ANCHOR_VERSION"
+
+# Fund wallet
+log "💰 Checking wallet balance..."
+BALANCE=$(solana balance $WALLET_ADDR --url devnet 2>/dev/null | awk '{print $1}')
+if (( $(echo "$BALANCE < 1" | bc -l) )); then
+    log "Requesting airdrop..."
+    solana airdrop 2 $WALLET_ADDR --url devnet --quiet || warn "Airdrop may have failed - you can retry later"
 fi
-echo ""
 
-echo "${GREEN}======================================${NC}"
-echo "${GREEN}✅ Setup complete!${NC}"
+# Show final status
 echo ""
-echo "${BLUE}Next steps:${NC}"
-echo "  1. Get devnet SOL: ${YELLOW}solana airdrop 2 $(node -e "console.log(JSON.parse(require('fs').readFileSync('./wallet.json')).publicKey)")${NC}"
-echo "  2. Start frontend: ${YELLOW}cd app && npm start${NC}"
-echo "  3. Build programs: ${YELLOW}anchor build${NC}"
-echo "  4. Deploy:        ${YELLOW}anchor deploy --provider.cluster devnet${NC}"
+echo "=========================================="
+echo -e "${GREEN}✅ Setup Complete!${NC}"
 echo ""
-echo "${BLUE}Documentation:${NC}"
-echo "  • Quick Start:  ${YELLOW}cat QUICKSTART.md${NC}"
-echo "  • Full Docs:    ${YELLOW}cat README.md${NC}"
-echo "  • For Agents:   ${YELLOW}cat AGENT_GUIDE.md${NC}"
+echo "Wallet: $WALLET_ADDR"
+echo "Balance: $(solana balance $WALLET_ADDR --url devnet 2>/dev/null || echo '0') SOL"
+echo ""
+echo -e "${BLUE}Quick Commands:${NC}"
+echo "  make build      - Build programs"
+echo "  make test       - Run tests"
+echo "  make deploy     - Deploy to devnet"
+echo "  make frontend   - Start frontend"
+echo ""
+echo -e "${BLUE}Documentation:${NC}"
+echo "  cat QUICKSTART.md"
+echo "  cat AGENT_GUIDE.md"
 echo ""
