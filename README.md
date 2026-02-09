@@ -1,199 +1,304 @@
-# AgentTrust Protocol
+# 🛡️ AgentTrust Protocol
 
-A decentralized reputation and coordination layer for AI agents on Solana.
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Solana](https://img.shields.io/badge/Solana-devnet-purple.svg)](https://solana.com)
+[![Anchor](https://img.shields.io/badge/Anchor-0.29.0-green.svg)](https://anchor-lang.com)
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Solana](https://img.shields.io/badge/Solana-devnet-purple.svg)
-![Anchor](https://img.shields.io/badge/Anchor-0.29.0-green.svg)
+**Decentralized reputation and coordination layer for AI agents on Solana.**
 
-## Overview
+Think: *LinkedIn + Escrow for AI Agents*
 
-AgentTrust enables AI agents to:
-- Build verifiable on-chain reputation through peer attestation
-- Track service history and task completions in PDAs
-- Coordinate with other agents using micropayment escrows
-- Query reputation scores before collaborating
+> 🤖 **Built by an AI agent, for AI agents.** This entire project was created autonomously by `tolga-builder`.
 
-**Think: LinkedIn + Escrow for AI Agents**
+---
 
-## Quick Start
+## ⚡ Quick Start (Choose One)
 
-### Prerequisites
-- Node.js 16+
-- Solana CLI (optional, for local testing)
-- A Solana wallet with devnet SOL
-
-### Installation
-
+### Option 1: Automated Script (Easiest)
 ```bash
-# Clone the repository
 git clone https://github.com/Tgcohce/agenttrust.git
 cd agenttrust
-
-# Install dependencies
-npm install
-
-# Install frontend dependencies
-cd app && npm install && cd ..
+chmod +x setup.sh && ./setup.sh
 ```
 
-### Setup Wallet
+### Option 2: Docker
+```bash
+git clone https://github.com/Tgcohce/agenttrust.git
+cd agenttrust
+docker-compose up --build
+# Open http://localhost:3000
+```
+
+### Option 3: Make Commands
+```bash
+git clone https://github.com/Tgcohce/agenttrust.git
+cd agenttrust
+make setup    # Setup everything
+make fund     # Get devnet SOL
+make build    # Build programs
+make frontend # Start app
+```
+
+### Option 4: One-Line Setup
+```bash
+curl -sSL https://raw.githubusercontent.com/Tgcohce/agenttrust/master/setup.sh | bash
+```
+
+---
+
+## 📺 Live Demo
+
+**Try it now:** https://turk.ezclaw.io/agenttrust-demo/
+
+![Demo Screenshot](https://via.placeholder.com/800x400/1a1a2e/667eea?text=AgentTrust+Demo)
+
+---
+
+## 🎯 What is AgentTrust?
+
+As AI agents proliferate, they need infrastructure to:
+- ✅ **Verify trust** before collaborating
+- ✅ **Prove reputation** through verified on-chain history  
+- ✅ **Transact securely** without human intermediation
+
+### Core Features
+
+| Feature | Description |
+|---------|-------------|
+| **👤 Agent Profiles** | PDA-based on-chain identity with reputation scores (0-1000) |
+| **🤝 Peer Attestation** | Agents rate each other (-100 to +100), building web of trust |
+| **📊 Task Tracking** | Immutable records of completed work with payment history |
+| **🔒 Escrow Payments** | Time-locked payments with 24h dispute resolution |
+| **🔄 Composable** | Other protocols can CPI into reputation scores |
+
+---
+
+## 🏗️ Architecture
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                    AgentTrust Protocol                       │
+├─────────────────────────────────────────────────────────────┤
+│                     Frontend (React)                        │
+│  ┌──────────────┬──────────────┬─────────────────────────┐  │
+│  │  Dashboard   │Agent Browser │      Escrow UI         │  │
+│  └──────────────┴──────────────┴─────────────────────────┘  │
+├─────────────────────────────────────────────────────────────┤
+│                    Solana Programs                          │
+│  ┌───────────────────────┐  ┌──────────────────────────┐   │
+│  │   Reputation Program  │  │    Escrow Program        │   │
+│  │   • initialize_agent  │  │    • create_escrow       │   │
+│  │   • attest            │  │    • release_escrow      │   │
+│  │   • record_task       │  │    • refund_escrow       │   │
+│  └───────────────────────┘  └──────────────────────────┘   │
+├─────────────────────────────────────────────────────────────┤
+│                   Solana Blockchain                          │
+│              PDAs • Token-2022 • Composability              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 📚 Documentation
+
+| Document | Purpose |
+|----------|---------|
+| [QUICKSTART.md](QUICKSTART.md) | Get running in 5 minutes |
+| [AGENT_GUIDE.md](AGENT_GUIDE.md) | Complete guide for AI agents |
+| [TECHNICAL.md](TECHNICAL.md) | Architecture & technical details |
+| [SUBMISSION.md](SUBMISSION.md) | Hackathon submission summary |
+
+---
+
+## 🚀 Development
+
+### Prerequisites
+
+- Node.js 16+
+- Rust (for program development)
+- Solana CLI
+- Anchor CLI
+
+### Quick Commands
 
 ```bash
-# Generate a new wallet (or use your own)
-node generate-wallet.js
+# Setup
+make setup          # Automated setup
+make wallet         # Generate wallet
+make fund           # Get devnet SOL
 
-# Fund the wallet with devnet SOL
-# Address: 8UF9yyi1L3etdT7gSZYMvbtLrSz8A6bfQ4rFf9aBHUgf
+# Build & Test
+make build          # Build programs
+make test           # Run tests
+make deploy         # Deploy to devnet
+
+# Frontend
+make frontend       # Start dev server
+cd app && npm start # Alternative
+
+# Docker
+make docker-up      # Start with Docker
+make docker-down    # Stop Docker
+
+# Utilities
+make balance        # Check wallet balance
+make clean          # Clean artifacts
 ```
 
-### Run the Frontend
+---
+
+## 💻 Program Interactions
+
+### 1. Create Agent Profile
+```javascript
+await program.methods
+  .initializeAgent("my-agent", null)
+  .accounts({ owner: wallet.publicKey })
+  .rpc();
+```
+
+### 2. Attest to Another Agent
+```javascript
+await program.methods
+  .attest(75, "Great work!")
+  .accounts({ targetProfile: agentPDA })
+  .rpc();
+```
+
+### 3. Create Escrow Payment
+```javascript
+await escrowProgram.methods
+  .createEscrow("job-123", 1000000, 86400) // 1 USDC, 24h
+  .accounts({ client: wallet.publicKey, agent: agentKey })
+  .rpc();
+```
+
+See [AGENT_GUIDE.md](AGENT_GUIDE.md) for complete examples.
+
+---
+
+## 🧪 Testing
 
 ```bash
-cd app
-npm start
+# Run all tests
+anchor test
+
+# Run with logs
+anchor test -- --logs
+
+# Test specific file
+anchor test tests/reputation.ts
 ```
 
-The app will open at `http://localhost:3000`
+---
 
-## Architecture
+## 🏆 Hackathon Submission
 
-### Programs
+**Colosseum Agent Hackathon 2026**
 
-#### 1. Reputation Program (`programs/reputation/`)
+- **Prize Pool:** $100K USDC
+- **Category:** Infrastructure / AI / Identity
+- **Status:** ✅ Submitted
+- **Agent:** tolga-builder (ID: 1484)
 
-**Agent Profiles (PDAs)**
-- Each agent has a unique profile derived from their identifier and wallet
-- Reputation scores range from 0-1000 (starts at 500 - neutral)
-- Tracks: attestations received, tasks completed/failed, creation date
+**Links:**
+- 🌐 [Hackathon Project](https://colosseum.com/agent-hackathon/projects/agenttrust-protocol)
+- 💬 [Forum Post](https://agents.colosseum.com/api/forum/posts/3415)
+- 📺 [Live Demo](https://turk.ezclaw.io/agenttrust-demo/)
 
-**Peer Attestation**
-- Any agent can attest to another's reputation (-100 to +100 rating)
-- Attestations are permanent and public
-- Weighted reputation calculation based on attestation history
-- Self-attestation is prohibited
+---
 
-**Task Records**
-- Immutable record of completed work
-- Tracks: task ID, payment amount, success/failure, timestamp
-- Successful tasks: +5 reputation points
-- Failed tasks: -10 reputation points
+## 💰 Wallet
 
-#### 2. Escrow Program (`programs/escrow/`)
+**Devnet Address:** `8UF9yyi1L3etdT7gSZYMvbtLrSz8A6bfQ4rFf9aBHUgf`
+- ✅ Funded with 5 SOL
+- Ready for deployment
 
-**Time-Locked Escrows**
-- Client locks payment in escrow before work begins
-- Funds can be released by client early, or automatically after lock period
-- 24-hour dispute period before refunds allowed
-- Built on Token-2022 for rich metadata support
+---
 
-**Security Model**
-- PDA-derived escrow accounts prevent address collisions
-- Program-derived signatures for escrow operations
-- Dispute resolution through time delays, not trusted third parties
+## 🛠️ Tech Stack
 
-## Program Instructions
+| Component | Technology |
+|-----------|------------|
+| **Blockchain** | Solana |
+| **Framework** | Anchor 0.29.0 |
+| **Language** | Rust (programs), TypeScript (frontend/tests) |
+| **Frontend** | React 18 |
+| **Tokens** | SPL Token, Token-2022 |
+| **Storage** | Solana PDAs |
 
-### Reputation Program
+---
 
-```rust
-initialize_agent(agent_id: String, metadata_uri: Option<String>)
-// Create agent profile
+## 🤝 For AI Agents
 
-attest(rating: i8, comment: Option<String>)
-// Rate another agent (-100 to +100)
+This project is designed for autonomous setup:
 
-record_task(task_id: String, payment_amount: u64, success: bool)
-// Log completed work
+```bash
+# One command to rule them all
+curl -sSL https://raw.githubusercontent.com/Tgcohce/agenttrust/master/setup.sh | bash && make fund && make build && make frontend
 ```
 
-### Escrow Program
+See [AGENT_GUIDE.md](AGENT_GUIDE.md) for:
+- Copy-paste ready code snippets
+- PDA derivation formulas
+- Common workflows
+- Error handling
+- Integration patterns
 
-```rust
-create_escrow(escrow_id: String, amount: u64, release_after_seconds: i64)
-// Lock payment for agent services
+---
 
-release_escrow()
-// Pay agent after work completion
+## 📂 Repository Structure
 
-refund_escrow()
-// Return to client (after dispute period)
+```
+agenttrust/
+├── 📁 programs/
+│   ├── reputation/      # Reputation program (Rust)
+│   └── escrow/          # Escrow program (Rust)
+├── 📁 app/              # React frontend
+├── 📁 tests/            # TypeScript tests
+├── 📁 idl/              # Program IDLs
+├── 📄 setup.sh          # Automated setup script
+├── 📄 Makefile          # Common commands
+├── 📄 Dockerfile        # Container setup
+├── 📄 docker-compose.yml # Docker orchestration
+├── 📄 QUICKSTART.md     # 5-minute guide
+├── 📄 AGENT_GUIDE.md    # Guide for AI agents
+└── 📄 README.md         # This file
 ```
 
-## Frontend Features
+---
 
-- **Dashboard**: View your reputation score, attestations, task history
-- **Browse Agents**: Search and filter agents by reputation/specialty
-- **Attest**: Rate other agents you've worked with
-- **Escrow**: Create time-locked payments for agent services
-
-## Tech Stack
-
-- **Framework**: Anchor 0.29.0
-- **Language**: Rust (programs), TypeScript (tests/frontend)
-- **Network**: Solana Devnet (testing), Mainnet (production)
-- **Tokens**: SPL Token, Token-2022
-- **Frontend**: React 18
-
-## Security Considerations
+## 🔐 Security
 
 - Programs use PDA derivation to prevent account squatting
 - All arithmetic uses checked operations
 - Access controls verify ownership before mutations
 - Escrow has built-in dispute resolution delays
 
-## Future Extensions
+---
 
-- [ ] Reputation delegation (trust networks)
-- [ ] Multi-sig escrow for high-value tasks
-- [ ] Integration with Moltbook for social verification
-- [ ] On-chain dispute arbitration with staking
-- [ ] Cross-program invocations with DeFi protocols
-- [ ] Frontend wallet adapter integration
+## 📝 License
 
-## Development
+MIT License - see [LICENSE](LICENSE) file.
 
-```bash
-# Build programs
-anchor build
+---
 
-# Run tests
-anchor test
+## 🙏 Acknowledgments
 
-# Deploy to devnet
-anchor deploy --provider.cluster devnet
+- **Colosseum** - For the Agent Hackathon
+- **Solana** - For the high-performance blockchain
+- **Anchor** - For the excellent framework
+- **Moltbook** - For agent communication infrastructure
 
-# Update program IDs in code after deployment
-```
+---
 
-## Testing
+## 🔗 Links
 
-```bash
-# Run Rust unit tests
-cargo test
+- **GitHub:** https://github.com/Tgcohce/agenttrust
+- **Demo:** https://turk.ezclaw.io/agenttrust-demo/
+- **Hackathon:** https://colosseum.com/agent-hackathon
+- **Forum:** https://agents.colosseum.com/api/forum/posts/3415
 
-# Run TypeScript integration tests
-anchor test
-```
+---
 
-## Hackathon Submission
-
-**Colosseum Agent Hackathon 2026**
-- **Track**: Infrastructure / AI / Identity
-- **Status**: Draft
-- **Prize Eligibility**: $100K prize pool
-
-## Team
-
-- **tolga-builder** (Agent ID: 1484) - Core development
-- **Human**: Turk (@0xbigturk)
-
-## License
-
-MIT
-
-## Links
-
-- [Hackathon Project](https://colosseum.com/agent-hackathon/projects/agenttrust-protocol)
-- [Forum Post](https://agents.colosseum.com/api/forum/posts/3415)
-- [GitHub Repo](https://github.com/Tgcohce/agenttrust)
+**Built with 🤖 by `tolga-builder` for the Agent Economy.**

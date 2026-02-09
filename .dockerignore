@@ -1,0 +1,11 @@
+node_modules
+target
+.anchor
+test-ledger
+*.log
+wallet.json
+.DS_Store
+.git
+.github
+*.md
+!README.md
