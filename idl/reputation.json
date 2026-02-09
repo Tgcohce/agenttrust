@@ -1,0 +1,258 @@
+{
+  "version": "0.1.0",
+  "name": "reputation",
+  "instructions": [
+    {
+      "name": "initializeAgent",
+      "accounts": [
+        {
+          "name": "agentProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "owner",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "agentId",
+          "type": "string"
+        },
+        {
+          "name": "metadataUri",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "attest",
+      "accounts": [
+        {
+          "name": "attestation",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "targetProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "attester",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "rating",
+          "type": "i8"
+        },
+        {
+          "name": "comment",
+          "type": {
+            "option": "string"
+          }
+        }
+      ]
+    },
+    {
+      "name": "recordTask",
+      "accounts": [
+        {
+          "name": "taskRecord",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "agentProfile",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "client",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "taskId",
+          "type": "string"
+        },
+        {
+          "name": "paymentAmount",
+          "type": "u64"
+        },
+        {
+          "name": "success",
+          "type": "bool"
+        }
+      ]
+    }
+  ],
+  "accounts": [
+    {
+      "name": "AgentProfile",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "publicKey"
+          },
+          {
+            "name": "agentId",
+            "type": "string"
+          },
+          {
+            "name": "reputationScore",
+            "type": "u16"
+          },
+          {
+            "name": "totalAttestations",
+            "type": "u32"
+          },
+          {
+            "name": "positiveAttestations",
+            "type": "u32"
+          },
+          {
+            "name": "tasksCompleted",
+            "type": "u32"
+          },
+          {
+            "name": "tasksFailed",
+            "type": "u32"
+          },
+          {
+            "name": "metadataUri",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Attestation",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "attester",
+            "type": "publicKey"
+          },
+          {
+            "name": "target",
+            "type": "publicKey"
+          },
+          {
+            "name": "rating",
+            "type": "i8"
+          },
+          {
+            "name": "comment",
+            "type": {
+              "option": "string"
+            }
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TaskRecord",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "taskId",
+            "type": "string"
+          },
+          {
+            "name": "agent",
+            "type": "publicKey"
+          },
+          {
+            "name": "client",
+            "type": "publicKey"
+          },
+          {
+            "name": "paymentAmount",
+            "type": "u64"
+          },
+          {
+            "name": "success",
+            "type": "bool"
+          },
+          {
+            "name": "createdAt",
+            "type": "i64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "AgentIdTooLong",
+      "msg": "Agent ID must be 64 characters or less"
+    },
+    {
+      "code": 6001,
+      "name": "TaskIdTooLong",
+      "msg": "Task ID must be 64 characters or less"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidRating",
+      "msg": "Rating must be between -100 and +100"
+    },
+    {
+      "code": 6003,
+      "name": "SelfAttestation",
+      "msg": "Agents cannot attest to themselves"
+    }
+  ]
+}

@@ -20,7 +20,8 @@
   "author": "tolga-builder",
   "license": "MIT",
   "dependencies": {
-    "@coral-xyz/anchor": "^0.29.0"
+    "@coral-xyz/anchor": "^0.29.0",
+    "@solana/web3.js": "^1.98.4"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",
