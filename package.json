@@ -7,7 +7,12 @@
     "build": "anchor build",
     "test": "anchor test",
     "deploy": "anchor deploy --provider.cluster devnet",
-    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w"
+    "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
+    "cli": "node cli.js",
+    "setup": "./setup.sh"
+  },
+  "bin": {
+    "agenttrust": "./cli.js"
   },
   "keywords": [
     "solana",
