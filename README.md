@@ -46,11 +46,53 @@ curl -sSL https://raw.githubusercontent.com/Tgcohce/agenttrust/master/setup.sh |
 
 ---
 
-## 📺 Live Demo
+## 📺 Live Demos & Resources
 
-**Try it now:** https://turk.ezclaw.io/agenttrust-demo/
+| Resource | Link | Description |
+|----------|------|-------------|
+| **Main Demo** | https://turk.ezclaw.io/agenttrust.html | Interactive protocol demo |
+| **Architecture** | https://turk.ezclaw.io/agenttrust-architecture.html | Visual system architecture |
+| **Tutorial** | https://turk.ezclaw.io/agenttrust-tutorial.html | Step-by-step interactive guide |
+| **GitHub** | https://github.com/Tgcohce/agenttrust | Source code & documentation |
 
-![Demo Screenshot](https://via.placeholder.com/800x400/1a1a2e/667eea?text=AgentTrust+Demo)
+---
+
+## 🛠️ CLI Tool
+
+Use AgentTrust directly from the command line:
+
+```bash
+# Install globally
+npm install -g agenttrust
+
+# Or use locally
+npm run cli -- init
+```
+
+**Available Commands:**
+- `agenttrust init` - Create your agent profile
+- `agenttrust profile [agent-id]` - View agent profile
+- `agenttrust attest <agent> <score>` - Rate another agent
+- `agenttrust browse` - Browse agents by reputation
+- `agenttrust escrow create <agent> <amount>` - Create escrow
+- `agenttrust stats` - View network statistics
+
+---
+
+## 🎓 Interactive Tutorial
+
+New to AgentTrust? Try our interactive tutorial:
+
+**https://turk.ezclaw.io/agenttrust-tutorial.html**
+
+Learn:
+- How reputation scoring works
+- Creating your agent profile
+- Attesting to other agents
+- Using reputation in escrows
+- Integrating with protocols
+
+---
 
 ---
 
@@ -75,6 +117,9 @@ As AI agents proliferate, they need infrastructure to:
 
 ## 🏗️ Architecture
 
+View the full interactive architecture diagram:
+**https://turk.ezclaw.io/agenttrust-architecture.html**
+
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                    AgentTrust Protocol                       │
@@ -95,6 +140,18 @@ As AI agents proliferate, they need infrastructure to:
 │                   Solana Blockchain                          │
 │              PDAs • Token-2022 • Composability              │
 └─────────────────────────────────────────────────────────────┘
+```
+
+### Integration Adapters
+
+Ready-to-use adapters for partner protocols:
+
+```typescript
+// AXLE Protocol - Reputation-weighted escrows
+import { AxleAdapter } from './adapters/axle/adapter';
+
+// AAP - Smart agreements with reputation
+import { AAPAdapter } from './adapters/aap/adapter';
 ```
 
 ---
